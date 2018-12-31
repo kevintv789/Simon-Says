@@ -23,6 +23,8 @@ class ViewController: UIViewController {
     var colorSequence = [Int]() // Use to playback sequence of buttons
     var colorsToTap = [Int]() // Users will need to reproduce the same values as in colorSequence
     
+    var gameEnded = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -42,6 +44,13 @@ class ViewController: UIViewController {
         createNewGame()
     }
     
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if gameEnded {
+            gameEnded = false
+            createNewGame()
+        }
+    }
+    
     func createNewGame() {
         colorSequence.removeAll()
         colorsToTap.removeAll()
@@ -52,6 +61,29 @@ class ViewController: UIViewController {
             button.alpha = 0.5
             button.isEnabled = false // only enable when game has started
         }
+        
+        currentPlayer = 0 // player 1 starts first
+        scores = [0, 0]
+        
+        playerLabels[currentPlayer].alpha = 1.0
+        playerLabels[1].alpha = 0.75
+        
+        updateScoreLabel()
+    }
+    
+    func updateScoreLabel() {
+        for (index, label) in scoreLabels.enumerated() {
+            label.text = "\(scores[index])"
+        }
+    }
+    
+    func switchPlayers() {
+        playerLabels[currentPlayer].alpha = 0.75
+        
+        // If current player is first player, then set it to 2nd player
+        currentPlayer = currentPlayer == 0 ? 1 : 0
+        
+        playerLabels[currentPlayer].alpha = 1.0
     }
     
     // Add one color to the colorSequence array
@@ -85,6 +117,12 @@ class ViewController: UIViewController {
         }
     }
     
+    func endGame() {
+        let message = currentPlayer == 0 ? "Player 2 Wins!" : "Player 1 Wins!"
+        actionButton.setTitle(message, for: .normal)
+        gameEnded = true
+    }
+    
     @IBAction func colorButtonHandle(_ sender: CircularButton) {
         // 1. If the tag of the button is equal to the first entry of the colorsToTap array
         // 2. Remove the first entry from the array so next time function is invoked, we can just
@@ -96,6 +134,7 @@ class ViewController: UIViewController {
                 button.isEnabled = false
             }
             
+            endGame()
             return
         }
         
@@ -104,7 +143,9 @@ class ViewController: UIViewController {
             for button in colorButtons {
                 button.isEnabled = false
             }
-            
+            scores[currentPlayer] += 1
+            updateScoreLabel()
+            switchPlayers()
             actionButton.setTitle("Continue", for: .normal)
             actionButton.isEnabled = true
         }
